@@ -24,7 +24,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         //유저명 지정
         //PhotonNetwork.NickName = userId;
 
-        //서버 접속
+        //서버 접속 ping test
         PhotonNetwork.ConnectUsingSettings();
         //이걸 하면 OnconnectedToMaster() 함수로 들어가게된다.
 
@@ -36,7 +36,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         userIdText.text = userId;
         PhotonNetwork.NickName = userId;
     }
-    //포톤 서버로 접속하는 함수
+    //포톤 서버로 접속됨을 알려주는 함수
     public override void OnConnectedToMaster()
     {
         Debug.Log("Connected to Photon Server!!!");
@@ -53,7 +53,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         Debug.Log("Joined Lobby!!!");
     }
 
-
+//랜덤 방에 들어가는걸 실패하면 실행되는 함수 
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
         Debug.Log($"code={returnCode},msg = {message}");
@@ -63,7 +63,7 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         ro.IsVisible = true;
         ro.MaxPlayers = 30;
         // 방을 생성
-        PhotonNetwork.CreateRoom("MyRoom", ro);
+        PhotonNetwork.CreateRoom(roomNameText.text, ro);
     }
 
     // 방 생성 완료 콜백함수
@@ -96,11 +96,23 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         //Lobby 생성하는 작업을 하고 나서 Scene 을 분리하고 주석처리함,
         //게임매니저 스크립트에서 탱크를 생성하게 추가할것.
     }
+    //룸 목록 수신
+    public override void OnRoomListUpdate(List<RoomInfo> roomlist)
+    {
+        foreach (var room in roomlist)
+        {
+            Debug.Log($"room name={room.Name}, ({room.PlayerCount}/{room.MaxPlayers})");
+        }
+    }
 
+
+
+
+#region UI_BUTTON_CALLBACK
     //로그인 버튼 클릭하면 랜덤한 방에 들어가지는 함수
     public void OnLoginClick()
     {
-        if( string.IsNullOrEmpty(userIdText.text))
+        if(string.IsNullOrEmpty(userIdText.text))
         {
             userId = $"USER_{Random.Range(0,100):00}";
             userIdText.text = userId;
@@ -110,6 +122,22 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         PhotonNetwork.NickName = userIdText.text;
         PhotonNetwork.JoinRandomRoom();
     }
+
+    public void OnMakeRoomClick()
+    {
+        RoomOptions ro = new RoomOptions();
+        ro.IsOpen = true;
+        ro.IsVisible = true;
+        ro.MaxPlayers = 30;
+
+        if(string.IsNullOrEmpty(roomNameText.text))
+        {
+            roomNameText.text = $"Room_{Random.Range(0,100):000}";  
+        }
+        // 방을 생성
+        PhotonNetwork.CreateRoom(roomNameText.text, ro);
+    }
+#endregion
 }
 
 
