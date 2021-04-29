@@ -9,16 +9,15 @@ public class TankCtrl : MonoBehaviour , IPunObservable
 {
 
     private Transform tr;
-    private Transform cannonTr;
-    private Transform turretTr;
     public float moveSpeed = 10.0f;
-    private PhotonView pv;
-    public AudioClip expSfx;
-
-    public TMPro.TMP_Text userIdText;
-    private new AudioSource audio;
+    public Transform cannonMesh;
     public Transform firePos;
     public GameObject cannon;
+
+    private PhotonView pv;
+    public AudioClip expSfx;
+    public TMPro.TMP_Text userIdText;
+    private new AudioSource audio;
     
 
     // Start is called before the first frame update
@@ -29,8 +28,6 @@ public class TankCtrl : MonoBehaviour , IPunObservable
         audio =GetComponent<AudioSource>();
         userIdText.text = pv.Owner.NickName;
 
-        turretTr = tr.Find("Turret").GetComponent<Transform>();
-        cannonTr = turretTr.Find("Cannon").GetComponent<Transform>();
         if (pv.IsMine)
         {   
             Camera.main.GetComponent<SmoothFollow>().target = tr.Find("CamPivot").transform;
@@ -51,13 +48,10 @@ public class TankCtrl : MonoBehaviour , IPunObservable
         {
             float v = Input.GetAxis("Vertical");
             float h = Input.GetAxis("Horizontal");
-            float u = Input.GetAxis("Mouse Y");
-            float r = Input.GetAxis("Mouse X");
 
             tr.Translate(Vector3.forward*Time.deltaTime*moveSpeed*v);
             tr.Rotate(Vector3.up*Time.deltaTime*100.0f*h);
-            turretTr.Rotate(Vector3.up *Time.deltaTime*100.0f *r);
-            cannonTr.Rotate(Vector3.right * Time.deltaTime * 100.0f * u);
+
             //포탄 발사 로직
             if (Input.GetMouseButtonDown(0))
             {
@@ -65,6 +59,9 @@ public class TankCtrl : MonoBehaviour , IPunObservable
                 //AllViaServer = 레이턴시 때문에 서로 포탄이 미스매치 되어 보이는데, 그걸 조금 줄여주는 기능
                 //서버에 맞춰서 함수를 호출해주기때문
             }
+            // 포신 회전 설정
+            float r = Input.GetAxis("Mouse ScrollWheel");
+            cannonMesh.Rotate(Vector3.right * Time.deltaTime * r * 100.0f);
         }
         else
         {

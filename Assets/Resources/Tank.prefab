@@ -520,10 +520,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 10
-  expSfx: {fileID: 8300000, guid: c59b70e4dec5147a487fd2b4d5acbfc2, type: 3}
-  userIdText: {fileID: 8180049788993578729}
+  cannonMesh: {fileID: 6386525501408981424}
   firePos: {fileID: 7289324086299205211}
   cannon: {fileID: 3677431514298187856, guid: 1526522c6373e6b4d9f10e6054f0e8d5, type: 3}
+  expSfx: {fileID: 8300000, guid: c59b70e4dec5147a487fd2b4d5acbfc2, type: 3}
+  userIdText: {fileID: 8180049788993578729}
 --- !u!114 &4519110801724919127
 MonoBehaviour:
   m_ObjectHideFlags: 0
