@@ -7,11 +7,20 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+
 public class GameManager : MonoBehaviourPunCallbacks
 {
+    [Header("Room Info")]
     public TMP_Text roomNameText;
     public TMP_Text connectInfoText;
     public TMP_Text messageText;
+    [Header("Chatting UI")]
+
+    public TMP_Text chatListText;
+    public TMP_InputField msgIF;
+
+
+    private PhotonView pv;
 
     public Button exitButton;
     
@@ -31,6 +40,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     void Start()
     {
         SetRoomInfo();
+        //pv = GetComponent<PhotonView>(); 아래처럼 선언해도 된다. 
+        pv = photonView;
     }
 
     void SetRoomInfo()
@@ -71,4 +82,17 @@ public class GameManager : MonoBehaviourPunCallbacks
         string msg = $"\n<color=#ff0000>{otherPlayer.NickName}</color> left room";
         messageText.text += msg;
     }
+
+    public void OnSendClick()
+    {
+        string _msg = $"<color=#00ff00>[{PhotonNetwork.NickName}]</color> {msgIF.text}";
+        pv.RPC("SendChatMessage", RpcTarget.AllBufferedViaServer, _msg);
+    }
+
+    [PunRPC]
+    void SendChatMessage(string msg)
+    {
+        chatListText.text += $"{msg}\n";
+    }
+
 }

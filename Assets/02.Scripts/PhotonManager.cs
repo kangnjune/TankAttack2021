@@ -15,6 +15,13 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     public TMP_InputField userIdText;
     public TMP_InputField roomNameText;
 
+    //룸 목록 저장하기 위한 딕셔너리 자료형
+    private Dictionary<string,GameObject> roomDict =new Dictionary<string, GameObject>();
+    //룸을 표시할 프리팹
+    public GameObject roomPrefab;
+    //Room 프리팹이 차일드화 시킬 부모 객체
+    public Transform scrollContent;
+
     void Awake()
     {   
         //방장이 Scene을 로딩하게되면 자동적으로 참가자들에게도 같은 Scene을 출력하는 기능
@@ -62,6 +69,11 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         ro.IsOpen = true;
         ro.IsVisible = true;
         ro.MaxPlayers = 30;
+        
+        if(string.IsNullOrEmpty(roomNameText.text))
+        {
+            roomNameText.text = $"Room_{Random.Range(0,100):000}";  
+        }
         // 방을 생성
         PhotonNetwork.CreateRoom(roomNameText.text, ro);
     }
@@ -99,12 +111,54 @@ public class PhotonManager : MonoBehaviourPunCallbacks
     //룸 목록 수신
     public override void OnRoomListUpdate(List<RoomInfo> roomlist)
     {
+        GameObject tempRoom = null; //함수안에 선언한 변수는 반드시 초기화를 해줘야한다.값을 넣어줘야한다는뜻
+
+    
         foreach (var room in roomlist)
         {
-            Debug.Log($"room name={room.Name}, ({room.PlayerCount}/{room.MaxPlayers})");
+            //룸이 삭제된 경우 
+            if(room.RemovedFromList == true) //룸이 리스트에서 삭제되어있는지에 대한 기능
+            {
+                //=> 딕셔너리에서 삭제, RoomItem 프리팹 삭제
+                roomDict.TryGetValue(room.Name, out tempRoom); //key값을 받아옴 =room.Name이라는 키값을 가져와서
+                                                               // tempRoom 에 value 값을 집어넣는다.
+                //받아온키값, 지워야한다.RoomItem 프리팹을 삭제
+                Destroy(tempRoom);
+                //딕셔너리 내 에서 데이터를 삭제
+                roomDict.Remove(room.Name);
+
+
+            }
+            else // 룸 정보가 갱신(변경)
+            {
+                // 룸이 처음 생성된 경우 딕셔너리에 데이터 추가 + RoomItem 프리펩 생성
+                if(roomDict.ContainsKey(room.Name) == false)//roomDict 라는 딕셔너리에서 값이 있는지 찾는함수
+                {
+                    GameObject _room = Instantiate(roomPrefab , scrollContent);
+                    /*
+                    scrollContent 는 위에서 퍼블릭으로 선언해주고, 유니티에서 Content 를 연결시켜주었다.
+                    Instantiate 변수에는 생성할 게임 오브젝트, 생성위치는  _room 오브젝트는 Content 아래 생성되고,
+                    Content 에는 Grid Layer Group 이 적용되어있어 자동정렬되므로 위치값은 필요없다.
+
+                    Content 아래 생성되기 위해서 scrollContent를 파라미터로 선언(Instantiate 파라미터에선 부모를 선언할수있다)
+                    */
+                    //룸 정보 표시
+                    _room.GetComponent<RoomData>().RoomInfo = room;
+                    //딕셔너리에 데이터 추가
+                    roomDict.Add(room.Name, _room);
+                }
+                else
+                {
+                    // 룸 정보를 갱신
+                    roomDict.TryGetValue(room.Name, out tempRoom);
+                    tempRoom.GetComponent<RoomData>().RoomInfo = room;
+                }
+                
+
+            }
         }
     }
-
+    
 
 
 

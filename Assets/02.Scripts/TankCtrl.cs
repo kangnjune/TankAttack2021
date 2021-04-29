@@ -5,7 +5,7 @@ using Photon.Pun;
 using UnityStandardAssets.Utility;
 
 
-public class TankCtrl : MonoBehaviour
+public class TankCtrl : MonoBehaviour , IPunObservable
 {
 
     private Transform tr;
@@ -66,6 +66,20 @@ public class TankCtrl : MonoBehaviour
                 //서버에 맞춰서 함수를 호출해주기때문
             }
         }
+        else
+        {
+            //레이턴시에 따른 문제가 있을수 있어서 
+            if((tr.position - receivePos).sqrMagnitude > 3.0f*3.0f)
+            {
+                tr.position = receivePos;
+            }
+            else
+            {
+                tr.position = Vector3.Lerp(tr.position, receivePos, Time.deltaTime*10.0f);
+            }
+
+            tr.rotation = Quaternion.Slerp(tr.rotation, receiveRot,Time.deltaTime*10.0f);
+        }
     }
     [PunRPC]
     void Fire(string shooterName)
@@ -73,5 +87,24 @@ public class TankCtrl : MonoBehaviour
         audio?.PlayOneShot(expSfx);
         GameObject _cannon = Instantiate(cannon, firePos.position , firePos.rotation);
         _cannon.GetComponent<Cannon>().shooter = shooterName;
+    }
+
+    //네트워크를 통해서 수신받을 변수
+    Vector3 receivePos = Vector3.zero;              
+    Quaternion receiveRot = Quaternion.identity;
+//기존 Photon View 로 처리했던 부분을 , 커스텀하게 옵션을 주고싶다면 , 이 함수를 쓰면된다.
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if(stream.IsWriting) //IsWritting 의 뜻은 photonView가 IsMine == true 일때 
+        {
+            stream.SendNext(tr.position); //위치값 보냄
+            stream.SendNext(tr.rotation); //회전값 보냄
+        }
+        else
+        {
+            //타입 변환을 해줘야한다.
+            receivePos = (Vector3) stream.ReceiveNext();
+            receiveRot = (Quaternion) stream.ReceiveNext();
+        }
     }
 }
